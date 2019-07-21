@@ -22,13 +22,17 @@ class Utility(commands.Cog):
         botMember = discord.utils.find(lambda m: m.id == self.client.user.id, ctx.guild.members)
 
         embed = discord.Embed(
-            title = "**{0}** Information".format(app.name), 
             description = app.description
+        )
+
+        embed.set_author(
+            name = "{0} Information".format(app.name),
+            icon_url = botMember.avatar_url
         )
 
         embed.add_field(
             name = ":regional_indicator_a: Username",
-            value = self.client.user,
+            value = botMember,
             inline = True
         )
         
@@ -52,9 +56,9 @@ class Utility(commands.Cog):
         elif (uptime < 60 * 60): # Minutes
             uptimeString = "{0} minutes".format(round(uptime / 60, 2))
         elif (uptime < 60 * 60 * 24): # Hours
-            uptimeString = "{0} hours".format(round(uptime / 60 / 60), 2)
+            uptimeString = "{0} hours".format(round(uptime / 60 / 60, 2))
         else: # Days
-            uptimeString = "{0} days".format(round(uptime / 60 / 60 / 24), 2)
+            uptimeString = "{0} days".format(round(uptime / 60 / 60 / 24, 2))
 
         embed.add_field(
             name = ":clock3: Uptime",
