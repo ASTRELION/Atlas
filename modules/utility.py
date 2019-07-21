@@ -18,11 +18,13 @@ class Utility(commands.Cog):
 
     @commands.command("botinfo")
     async def botinfo(self, ctx):
+        """Display information about the bot"""
         app = await self.client.application_info()
         botMember = discord.utils.find(lambda m: m.id == self.client.user.id, ctx.guild.members)
 
         embed = discord.Embed(
-            description = app.description
+            description = app.description,
+            color = botMember.color
         )
 
         embed.set_author(
