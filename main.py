@@ -1,47 +1,48 @@
 import discord
 from discord.ext import commands
-import json;
+from stats import Stats
+import json
+import time
 
 config = {}
 with open("./config.json") as json_config:
     config = json.load(json_config)
 
-# client = discord.Client()
-bot = commands.Bot(command_prefix = config["prefix"])
-bot.config = config;
+client = commands.Bot(
+    command_prefix = config["prefix"], 
+    activity = discord.Game(">_")
+)
+client.config = config
+client.stats = Stats()
 
 # On Ready
-@bot.event
+@client.event
 async def on_ready():
-    """Confirm bot readyness to console"""
-    print("> Logged in as {0.user}".format(bot))
-    print("> Command prefix \'{0}\'".format(bot.config["prefix"]))
+    """Confirm client readyness to console"""
+    print("> Logged in as {0.user}".format(client))
+    print("> Command prefix \'{0}\'".format(client.config["prefix"]))
 
     for module in config["modules"]:
-        bot.load_extension("modules.{0}".format(module))
+        client.load_extension("modules.{0}".format(module))
         print(">> Loaded {0} module".format(module))
 
     print("> Loaded {0} module(s)".format(len(config["modules"])))
 
-    sumUsers = 0;
-
-    for guild in bot.guilds:
-        sumUsers += len(guild.members)
+    for guild in client.guilds:
         print(">> Connected to guild \"{0}\" -- {1} users".format(guild.name, len(guild.members)))
 
-    print("> Connected to {0} guild(s) -- {1} user(s)".format(len(bot.guilds), sumUsers))
-
-    await bot.change_presence(activity = discord.Game(">_"))
+    print("> Connected to {0} guild(s) -- {1} user(s)".format(len(client.guilds), len(client.users)))
 
 # On Message
-@bot.event
+@client.event
 async def on_message(message):
     """Process command if valid"""
-    if (message.author == bot.user): # Ignore messages sent by itself
+    if (message.author == client.user): # Ignore messages sent by itself
         return
 
     # Handle command using modules
-    await bot.process_commands(message)
+    await client.process_commands(message)
+    client.stats.commands_processed += 1
 
 # Connect & Login
-bot.run(config["token"], bot = True)
+client.run(config["token"], bot = True)
