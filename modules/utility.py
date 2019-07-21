@@ -100,9 +100,13 @@ class Utility(commands.Cog):
         await ctx.send(embed = embed)
 
     @commands.command("serverinfo")
-    async def serverinfo(self, ctx):
+    async def serverinfo(self, serverID, ctx):
+        guild = self.client.get_guild(serverID)
+
+        print(guild.name)
+
         embed = discord.Embed(
-            title = "**{0}** Information".format(ctx.guild.name)
+            title = "**{0}** Information"
         )
 
         await ctx.send(embed = embed)
