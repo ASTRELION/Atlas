@@ -16,6 +16,15 @@ class Utility(commands.Cog):
         latency = self.client.latency
         await ctx.send("Pong! *{}ms*".format(round(latency * 1000)))
 
+    @commands.command("clear")
+    async def clear(self, ctx):
+        """Send a blank message to clear chat"""
+        blank = ""
+        for i in range(35):
+            blank += "\n\u200B"
+
+        await ctx.send(blank + "`Chat cleared by {0}`".format(ctx.author))
+
     @commands.command("botinfo")
     async def botinfo(self, ctx):
         """Display information about the bot"""
@@ -100,21 +109,62 @@ class Utility(commands.Cog):
         await ctx.send(embed = embed)
 
     @commands.command("serverinfo")
-    async def serverinfo(self, serverID, ctx):
-        guild = self.client.get_guild(serverID)
-
-        print(guild.name)
+    async def serverinfo(self, ctx):
+        """Get information about the current server or given server ID"""
+        guild = ctx.guild
 
         embed = discord.Embed(
-            title = "**{0}** Information"
+            description = guild.description
+        )
+
+        embed.set_author(
+            name = "{0} Information".format(guild.name),
+            icon_url = guild.icon_url
+        )
+
+        embed.add_field(
+            name = ":regional_indicator_a: Name",
+            value = guild.name
+        )
+
+        embed.add_field(
+            name = ":exclamation: Verification Level",
+            value = guild.verification_level
+        )
+
+        embed.add_field(
+            name = ":earth_americas: Region",
+            value = guild.region
+        )
+
+        created = guild.created_at
+        embed.add_field(
+            name = ":birthday: Date Created",
+            value = created.strftime("%d.%m.%Y at %H:%M")
+        )
+
+        age = (datetime.datetime.now() - created).days
+        embed.add_field(
+            name = ":calendar_spiral: Age",
+            value = "{0} days ({1} years)".format(age, round(age / 365, 2)),
+        )
+
+        embed.add_field(
+            name = ":busts_in_silhouette: Total Members",
+            value = guild.member_count
         )
 
         await ctx.send(embed = embed)
 
     @commands.command("userinfo")
     async def userinfo(self, ctx):
-        embed = discord.Embed(
-            title = "**{0}** Information".format(ctx.author.name)
+        """Get information about your user or given user ID"""
+        user = ctx.author
+        embed = discord.Embed()
+
+        embed.set_author(
+            name = "{0} Information".format(user),
+            icon_url = user.avatar_url
         )
 
         await ctx.send(embed = embed)
