@@ -10,7 +10,7 @@ with open("./config.json") as json_config:
 
 client = commands.Bot(
     command_prefix = config["prefix"], 
-    activity = discord.Game(">_")
+    activity = discord.Game(config["activity"])
 )
 client.config = config
 client.stats = Stats()
