@@ -112,7 +112,7 @@ class Utility(commands.Cog):
     @commands.command("serverinfo")
     async def serverinfo(self, ctx, guildID: typing.Optional[int] = None):
         """Display server information"""
-        if (guildID == None or guildID not in (g.id for g in self.client.guilds)): 
+        if (guildID is None or guildID not in (g.id for g in self.client.guilds)): 
             guildID = ctx.guild.id
             # await ctx.send("Server ID not recognized, displaying this server instead.")
             
@@ -156,12 +156,12 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name = ":microphone2: Broadcast Channel",
-            value = guild.system_channel.name
+            value = "None" if guild.system_channel is None else guild.system_channel.name
         )
 
         embed.add_field(
             name = ":sleeping: AFK Channel",
-            value = guild.afk_channel.name
+            value = "None" if guild.afk_channel is None else guild.afk_channel.name
         )
 
         embed.add_field(
@@ -198,11 +198,60 @@ class Utility(commands.Cog):
             user = ctx.author
             # await ctx.send("User not recognized, displaying your information instead.")
 
-        embed = discord.Embed()
-
+        embed = discord.Embed(
+            color = user.color
+        )
+        
         embed.set_author(
             name = "{0} Information".format(user),
             icon_url = user.avatar_url
+        )
+
+        embed.add_field(
+            name = ":regional_indicator_a: Full Username",
+            value = user
+        )
+
+        embed.add_field(
+                name = ":desktop: Display Name",
+                value = user.display_name
+            )
+            
+        embed.add_field(
+            name = ":large_blue_circle: Status",
+            value = None if ctx.guild is None else user.status
+        )
+
+        embed.add_field(
+            name = ":video_game: Activity",
+            value = None if ctx.guild is None or user.activity is None else user.activity.name
+        )
+
+        created = user.created_at
+        embed.add_field(
+            name = ":birthday: Date Created",
+            value = created.strftime("%d.%m.%Y at %H:%M")
+        )
+
+        age = (datetime.datetime.now() - created).days
+        embed.add_field(
+            name = ":calendar_spiral: Age",
+            value = "{0} days ({1} years)".format(age, round(age / 365, 2)),
+        )
+
+        embed.add_field(
+            name = ":medal: Highest Role",
+            value = "None" if ctx.guild is None else user.top_role.name
+        )
+
+        embed.add_field(
+            name = ":robot: Bot?",
+            value = "No" if user.bot is False else "Yes"
+        )
+
+        embed.add_field(
+            name = ":gem: Nitro Boosting?",
+            value = "No" if ctx.guild is None or user.premium_since is None else "Yes"
         )
 
         await ctx.send(embed = embed)
