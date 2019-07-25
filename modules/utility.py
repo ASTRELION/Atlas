@@ -12,6 +12,16 @@ class Utility(commands.Cog):
         self.client = client
         self.config = client.config
 
+    @commands.command("help")
+    async def help(self, ctx):
+        commands = self.client.commands
+
+        helpString = ""
+        for command in commands:
+            helpString += command.name + "\t" + (command.help or "-") + "\n"
+
+        await ctx.send("```{0}```".format(helpString))
+
     @commands.command("ping")
     async def ping(self, ctx):
         latency = self.client.latency

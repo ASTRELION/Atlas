@@ -14,6 +14,7 @@ client = commands.Bot(
 )
 client.config = config
 client.stats = Stats()
+client.remove_command("help")
 
 @client.event
 async def on_connect():
