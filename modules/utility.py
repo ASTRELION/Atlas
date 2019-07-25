@@ -3,6 +3,7 @@ from discord.ext import commands
 import json
 import datetime
 import time
+import typing
 
 class Utility(commands.Cog):
     """General utility commands"""
@@ -109,9 +110,13 @@ class Utility(commands.Cog):
         await ctx.send(embed = embed)
 
     @commands.command("serverinfo")
-    async def serverinfo(self, ctx):
-        """Get information about the current server or given server ID"""
-        guild = ctx.guild
+    async def serverinfo(self, ctx, guildID: typing.Optional[int] = None):
+        """Display server information"""
+        if (guildID == None or guildID not in (g.id for g in self.client.guilds)): 
+            guildID = ctx.guild.id
+            # await ctx.send("Server ID not recognized, displaying this server instead.")
+            
+        guild = self.client.get_guild(guildID)            
 
         embed = discord.Embed(
             description = guild.description
@@ -150,16 +155,49 @@ class Utility(commands.Cog):
         )
 
         embed.add_field(
-            name = ":busts_in_silhouette: Total Members",
+            name = ":microphone2: Broadcast Channel",
+            value = guild.system_channel.name
+        )
+
+        embed.add_field(
+            name = ":sleeping: AFK Channel",
+            value = guild.afk_channel.name
+        )
+
+        embed.add_field(
+            name = ":loudspeaker: Voice Channels",
+            value = len(guild.voice_channels)
+        )
+
+        embed.add_field(
+            name = ":speech_left: Text Channels",
+            value = len(guild.text_channels)
+        )
+
+        embed.add_field(
+            name = ":busts_in_silhouette: Total Users",
             value = guild.member_count
+        )
+
+        embed.add_field(
+            name = ":gem: Nitro Boosts",
+            value = len(guild.premium_subscribers)
+        )
+
+        embed.add_field(
+            name = ":robot: Bot Count",
+            value = len(list(b for b in guild.members if (b.bot)))
         )
 
         await ctx.send(embed = embed)
 
     @commands.command("userinfo")
-    async def userinfo(self, ctx):
+    async def userinfo(self, ctx, user: typing.Optional[discord.Member] = None):
         """Get information about your user or given user ID"""
-        user = ctx.author
+        if (user == None): 
+            user = ctx.author
+            # await ctx.send("User not recognized, displaying your information instead.")
+
         embed = discord.Embed()
 
         embed.set_author(
