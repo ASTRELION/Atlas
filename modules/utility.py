@@ -16,11 +16,34 @@ class Utility(commands.Cog):
     async def help(self, ctx):
         commands = self.client.commands
 
-        helpString = ""
-        for command in commands:
-            helpString += command.name + "\t" + (command.help or "-") + "\n"
+        embed = discord.Embed(
+            title = "**{0} Help**".format(self.client.user.name),
+            description = "*use the reactions below to cycle through pages*",
+            color = ctx.author.color
+        )
 
-        await ctx.send("```{0}```".format(helpString))
+        noCategoryCommands = "\u200B"
+        noCategoryCommandsDesc = "\u200B"
+
+        for command in commands:
+            if (command.parent is None):
+                noCategoryCommands += "{0}{1} {2}\n".format(self.config["prefix"], command.qualified_name, command.signature)
+                noCategoryCommandsDesc += "{0}\n".format(command.help)
+
+        embed.add_field(
+            name = "General",
+            value = noCategoryCommands,
+            inline = True
+        )
+
+        embed.add_field(
+            name = "\u200B",
+            value = noCategoryCommandsDesc,
+            inline = True
+        )
+
+        helpMessage = await ctx.send(embed = embed)
+        await helpMessage.add_reaction("\u0031\u20E3")
 
     @commands.command("ping")
     async def ping(self, ctx):
