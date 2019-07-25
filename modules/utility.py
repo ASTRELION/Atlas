@@ -256,5 +256,23 @@ class Utility(commands.Cog):
 
         await ctx.send(embed = embed)
 
+    @commands.command("invite")
+    async def invite(self, ctx):
+        """Generate an invite to this server"""
+        invites = await ctx.guild.invites()
+        channel = ctx.channel
+
+        botInvites = list(x for x in invites if x.inviter.id == self.client.user.id and x.channel.id == channel.id)
+
+        invite = None
+        if (len(botInvites) == 0): # Create new invite in this channel
+            await ctx.send("No previous invite found, creating a new one.")
+            invite = await channel.create_invite(reason = "Bot created invite using !invite")
+        else:
+            await ctx.send("Previous invite found, retrieving that one.")
+            invite = botInvites[0]
+
+        await ctx.send(invite)
+
 def setup(client):
     client.add_cog(Utility(client))
