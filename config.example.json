@@ -1,5 +1,9 @@
 {
   "token": "token",
   "prefix": ">",
-  "modules": ["utility"]
+  "activity": "!help",
+  "modules": [
+    "utility",
+    "admin"
+  ]
 }
