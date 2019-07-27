@@ -58,15 +58,6 @@ class Utility(commands.Cog):
         latency = self.client.latency
         await ctx.send("Pong! *{}ms*".format(round(latency * 1000)))
 
-    @commands.command("clear")
-    async def clear(self, ctx):
-        """Send a blank message to clear chat"""
-        blank = ""
-        for i in range(35):
-            blank += "\n\u200B"
-
-        await ctx.send(blank + "`Chat cleared by {0}`".format(ctx.author))
-
     @commands.command("botinfo")
     async def botinfo(self, ctx):
         """Display information about the bot"""
