@@ -27,8 +27,16 @@ class Utility(commands.Cog):
 
         for command in commands:
             if (command.parent is None):
-                noCategoryCommands += "{0}{1} {2}\n".format(self.config["prefix"], command.qualified_name, command.signature)
+                noCategoryCommands += "{0}{1} {2}\n".format(
+                    self.config["prefix"], 
+                    command.qualified_name, 
+                    command.signature)
                 noCategoryCommandsDesc += "{0}\n".format(command.help)
+            else:
+                embed.add_field(
+                    name = command.parent.name,
+                    value = "-"
+                )
 
         embed.add_field(
             name = "General",
