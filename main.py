@@ -4,49 +4,50 @@ from data.stats import Stats
 import json
 import time
 
-config = {}
-with open("./config.json") as json_config:
-    config = json.load(json_config)
+class AtlasClient(commands.Bot):
+    """Custom Atlas Client inheriting Bot"""
 
-client = commands.Bot(
-    command_prefix = config["prefix"], 
-    activity = discord.Game(config["activity"])
-)
-client.config = config
-client.stats = Stats()
-client.remove_command("help")
+    def __init__(self):
+        config = {}
+        with open("./config.json") as json_config:
+            config = json.load(json_config)
 
-@client.event
-async def on_connect():
-    """Prepare bot modules and data"""
-    for module in config["modules"]:
-            client.load_extension("modules.{0}".format(module))
-            print(">> Loaded {0} module".format(module))
+        super().__init__(
+            command_prefix = config["prefix"], 
+            activity = discord.Game(config["activity"])
+        )
 
-    print("> Loaded {0} module(s)".format(len(config["modules"])))
+        self.config = config
+        self.stats = Stats()
+        self.remove_command("help")
 
-# On Ready
-@client.event
-async def on_ready():
-    """Confirm client readyness to console"""
-    print("> Logged in as {0.user}".format(client))
-    print("> Command prefix \'{0}\'".format(client.config["prefix"]))
+    async def on_connect(self):
+        """Prepare bot modules and data"""
+        for module in self.config["modules"]:
+                self.load_extension("modules.{0}".format(module))
+                print(">> Loaded {0} module".format(module))
 
-    for guild in client.guilds:
-        print(">> Connected to guild \"{0}\" -- {1} users".format(guild.name, len(guild.members)))
+        print("> Loaded {0} module(s)".format(len(self.config["modules"])))
 
-    print("> Connected to {0} guild(s) -- {1} user(s)".format(len(client.guilds), len(client.users)))
+    async def on_ready(self):
+        """Confirm client readyness to console"""
+        print("> Logged in as {0.user}".format(client))
+        print("> Command prefix \'{0}\'".format(client.config["prefix"]))
 
-# On Message
-@client.event
-async def on_message(message):
-    """Process command if valid"""
-    if (message.author == client.user): # Ignore messages sent by itself
-        return
+        for guild in client.guilds:
+            print(">> Connected to guild \"{0}\" -- {1} users".format(guild.name, len(guild.members)))
 
-    # Handle command using modules
-    await client.process_commands(message)
-    client.stats.commands_processed += 1
+        print("> Connected to {0} guild(s) -- {1} user(s)".format(len(client.guilds), len(client.users)))
+
+    async def on_message(self, message):
+        """Process command if valid"""
+        if (message.author == client.user): # Ignore messages sent by itself
+            return
+
+        # Handle command using modules
+        await self.process_commands(message)
+        self.stats.commands_processed += 1
 
 # Connect & Login
-client.run(config["token"], bot = True, reconnect = True)
+client = AtlasClient()
+client.run(client.config["token"], bot = True, reconnect = True)
