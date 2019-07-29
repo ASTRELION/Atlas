@@ -12,47 +12,70 @@ class Utility(commands.Cog):
         self.client = client
         self.config = client.config
 
-    @commands.command("help")
-    async def help(self, ctx):
-        commands = self.client.commands
+    def help_helper(self, page):
+        """Generates embed for the help command"""
+        page -= 1 # Adjust for indexing
+        if (page >= len(self.client.cogs)): page = 0
+        names = list(self.client.cogs)
+        cog = self.client.cogs[names[page]]
 
+        cmds = ""
         embed = discord.Embed(
-            title = "**{0} Help**".format(self.client.user.name),
-            description = "*use the reactions below to cycle through pages*",
-            color = ctx.author.color
+            title = "**{0} Commands\t|\t{1} Help**".format(cog.qualified_name, self.client.user.name),
+            color = self.client.color
         )
 
-        noCategoryCommands = "\u200B"
-        noCategoryCommandsDesc = "\u200B"
+        for cmd in cog.get_commands():
+            if (not isinstance(cmd, commands.core.Group)): # Commands without groups
+                cmds += "**{0}{1} {2}** -- {3}\n".format(
+                    self.config["prefix"],
+                    cmd.qualified_name,
+                    cmd.signature,
+                    cmd.help
+                )
+            else: # Commands in group
+                subcommands = ""
+                for subcmd in cmd.commands:
+                    subcommands += "**{0}{1} {2}** -- {3}\n".format(
+                        self.config["prefix"],
+                        subcmd.qualified_name,
+                        subcmd.signature,
+                        subcmd.help
+                    )
 
-        for command in commands:
-            if (command.parent is None):
-                noCategoryCommands += "{0}{1} {2}\n".format(
-                    self.config["prefix"], 
-                    command.qualified_name, 
-                    command.signature)
-                noCategoryCommandsDesc += "{0}\n".format(command.help)
-            else:
                 embed.add_field(
-                    name = command.parent.name,
-                    value = "-"
+                    name = "{0} Commands".format(cmd.name.title()),
+                    value = subcommands
                 )
 
-        embed.add_field(
-            name = "General",
-            value = noCategoryCommands,
-            inline = True
-        )
+        footer = " ".join("{0}-{1}".format(page + 1, name) for page, name in enumerate(names))
+        embed.set_footer(text = footer)
+        embed.description = cmds
+        return embed
 
-        embed.add_field(
-            name = "\u200B",
-            value = noCategoryCommandsDesc,
-            inline = True
-        )
+    @commands.command("help")
+    async def help(self, ctx, page: typing.Optional[int] = 1):
+        """Display commands ordered by module"""
+        helpMessage = await ctx.send(embed = self.help_helper(page))
+        
+        # Add page reaction buttons
+        for i in range(len(self.client.cogs)):
+            charBytes = b"\u003%d\u20E3" % (i + 1)
+            emoteString = charBytes.decode("unicode_escape")
+            await helpMessage.add_reaction(emoteString)
 
-        helpMessage = await ctx.send(embed = embed)
-        await helpMessage.add_reaction("\u0031\u20E3")
-
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        """Change help page"""
+        if (user != self.client.user and len(reaction.message.embeds) > 0 and "Atlas Help" in reaction.message.embeds[0].title):
+            try:
+                pageNum = int(str(str.encode(reaction.emoji))[2])
+                embed = self.help_helper(pageNum)
+                await reaction.message.edit(embed = embed)
+                await reaction.remove(user)
+            except:
+                pass
+            
     @commands.command("ping")
     async def ping(self, ctx):
         latency = self.client.latency
