@@ -8,19 +8,27 @@ class AtlasClient(commands.Bot):
     """Custom Atlas Client inheriting Bot"""
 
     def __init__(self):
-        config = {}
+        self.config = {}
         with open("./config.json") as json_config:
-            config = json.load(json_config)
+            self.config = json.load(json_config)
 
+        # Init bot
         super().__init__(
-            command_prefix = config["prefix"], 
-            activity = discord.Game(config["activity"])
+            command_prefix = self.config["prefix"], 
+            activity = discord.Game(self.config["activity"])
         )
 
-        self.config = config
-        self.stats = Stats()
-        self.remove_command("help")
+        self.stats = Stats() # Used for !botinfo
+        self.remove_command("help") # Allow custom !help command
 
+        # Used for embed message color
+        self.color = discord.Color.from_rgb(
+            self.config["color"][0],
+            self.config["color"][1],
+            self.config["color"][2]
+        )
+
+    # Fires when bot logs in
     async def on_connect(self):
         """Prepare bot modules and data"""
         for module in self.config["modules"]:
@@ -29,6 +37,7 @@ class AtlasClient(commands.Bot):
 
         print("> Loaded {0} module(s)".format(len(self.config["modules"])))
 
+    # Fires when bot is ready to receive commands
     async def on_ready(self):
         """Confirm client readyness to console"""
         print("> Logged in as {0.user}".format(client))
@@ -39,6 +48,7 @@ class AtlasClient(commands.Bot):
 
         print("> Connected to {0} guild(s) -- {1} user(s)".format(len(client.guilds), len(client.users)))
 
+    # Fires everytime a message is sent
     async def on_message(self, message):
         """Process command if valid"""
         if (message.author == client.user): # Ignore messages sent by itself
