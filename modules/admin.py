@@ -20,5 +20,13 @@ class Admin(commands.Cog):
 
         await self.client.change_presence(activity = discord.Game(self.config["activity"]))
 
+    @commands.command("reload")
+    @commands.is_owner()
+    async def reload(self, ctx, *, module: str):
+        """Reload a module"""
+        module = str.lower(module)
+        self.client.reload_extension("modules.{0}".format(module))
+        await ctx.send("{0} module reloaded.".format(module))
+
 def setup(client):
     client.add_cog(Admin(client))
