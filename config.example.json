@@ -1,9 +1,11 @@
 {
   "token": "token",
-  "prefix": ">",
+  "prefix": "!",
   "activity": "!help",
+  "color": [0, 255, 255],
   "modules": [
-    "utility",
-    "admin"
+      "utility",
+      "moderation",
+      "admin"
   ]
 }
