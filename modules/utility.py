@@ -12,7 +12,7 @@ class Utility(commands.Cog):
         self.client = client
         self.config = client.config
 
-    def help_helper(self, page):
+    def help_helper(self, page, userID):
         """Generates embed for the help command"""
         page -= 1 # Adjust for indexing
         if (page >= len(self.client.cogs)): page = 0
@@ -21,7 +21,7 @@ class Utility(commands.Cog):
 
         cmds = ""
         embed = discord.Embed(
-            title = "**{0} Commands\t|\t{1} Help**".format(cog.qualified_name, self.client.user.name),
+            title = "**{0} Commands** | {1} Help - {2}".format(cog.qualified_name, self.client.user.name, userID),
             color = self.client.color
         )
 
@@ -56,9 +56,9 @@ class Utility(commands.Cog):
     @commands.command("help")
     async def help(self, ctx, page: typing.Optional[int] = 1):
         """Display commands ordered by module"""
-        helpMessage = await ctx.send(embed = self.help_helper(page))
+        helpMessage = await ctx.send(embed = self.help_helper(page, ctx.author.id))
         
-        # Add page reaction buttons
+        # Messily add page reaction buttons
         for i in range(len(self.client.cogs)):
             charBytes = b"\u003%d\u20E3" % (i + 1)
             emoteString = charBytes.decode("unicode_escape")
@@ -67,10 +67,13 @@ class Utility(commands.Cog):
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         """Change help page"""
-        if (user != self.client.user and len(reaction.message.embeds) > 0 and "Atlas Help" in reaction.message.embeds[0].title):
+        if (user != self.client.user and 
+                len(reaction.message.embeds) > 0 and 
+                "Atlas Help" in reaction.message.embeds[0].title and 
+                str(user.id) in reaction.message.embeds[0].title):
             try:
                 pageNum = int(str(str.encode(reaction.emoji))[2])
-                embed = self.help_helper(pageNum)
+                embed = self.help_helper(pageNum, user.id)
                 await reaction.message.edit(embed = embed)
                 await reaction.remove(user)
             except:
@@ -89,7 +92,7 @@ class Utility(commands.Cog):
 
         embed = discord.Embed(
             description = app.description,
-            color = botMember.color
+            color = self.client.color
         )
 
         embed.set_author(
@@ -115,7 +118,7 @@ class Utility(commands.Cog):
             inline = True
         )
 
-        uptime = time.time() - self.client.stats.start_time
+        uptime = time.time() - self.client.botStats.start_time
         uptimeString = ""
 
         if (uptime < 60): # Seconds
@@ -159,7 +162,7 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name = ":robot: Commands Processed",
-            value = self.client.stats.commands_processed
+            value = self.client.botStats.commands_processed
         )
 
         await ctx.send(embed = embed)
@@ -174,7 +177,8 @@ class Utility(commands.Cog):
         guild = self.client.get_guild(guildID)            
 
         embed = discord.Embed(
-            description = guild.description
+            description = guild.description,
+            color = self.client.color
         )
 
         embed.set_author(
