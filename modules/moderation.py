@@ -50,12 +50,19 @@ class Moderation(commands.Cog, name = "Moderation"):
     @mute.command("text") #mute text
     async def mutetext(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Prevent given user from typing in text channels"""
-        await ctx.send("mute text")
+        for channel in ctx.guild.text_channels:
+            await channel.set_permissions(user, send_messages = False, reason = reason)
 
     @commands.command("unmute")
     async def unmute(self, ctx, user: discord.Member):
         """Unmute given user and restore speaking and typing capabilities"""
-        await user.edit(mute = False)
+        try:
+            await user.edit(mute = False, reason = "Unmuted {0}".format(user))
+        except:
+            pass
+
+        for channel in ctx.guild.text_channels:
+            await channel.set_permissions(user, send_messages = None, reason = "Unmuted {0}".format(user))
 
     @commands.command("banlist")
     async def banlist(self, ctx):
