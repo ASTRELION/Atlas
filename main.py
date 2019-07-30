@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
-from data.stats import Stats
 import json
 import time
+from collections import namedtuple
 
 class AtlasClient(commands.Bot):
     """Custom Atlas Client inheriting Bot"""
@@ -18,7 +18,6 @@ class AtlasClient(commands.Bot):
             activity = discord.Game(self.config["activity"])
         )
 
-        self.stats = Stats() # Used for !botinfo
         self.remove_command("help") # Allow custom !help command
 
         # Used for embed message color
@@ -27,6 +26,11 @@ class AtlasClient(commands.Bot):
             self.config["color"][1],
             self.config["color"][2]
         )
+
+        botStats = namedtuple("botStats", "start_time commands_processed")
+        botStats.start_time = time.time()
+        botStats.commands_processed = 0
+        self.botStats = botStats
 
     # Fires when bot logs in
     async def on_connect(self):
@@ -56,7 +60,7 @@ class AtlasClient(commands.Bot):
 
         # Handle command using modules
         await self.process_commands(message)
-        self.stats.commands_processed += 1
+        self.botStats.commands_processed += 1
 
 # Connect & Login
 client = AtlasClient()
