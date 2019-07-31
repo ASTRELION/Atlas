@@ -12,7 +12,7 @@ class AtlasClient(commands.Bot):
     def __init__(self):
         # Load Configuration
         self.config = {}
-        with open("./config.json") as json_config:
+        with open("data/config.json") as json_config:
             self.config = json.load(json_config)
         
         # Init bot
