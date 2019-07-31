@@ -85,5 +85,13 @@ class Moderation(commands.Cog, name = "Moderation"):
         blank = "\n\u200B" * 50
         await ctx.send(blank + "`Chat cleared by {0}`".format(ctx.author))
 
+    @commands.command("purge")
+    @commands.bot_has_permissions(manage_channels = True)
+    @commands.has_permissions(manage_channels = True)
+    async def purge(self, ctx, *, reason: typing.Optional[str] = None):
+        """Delete this channel and clone it anew"""
+        await ctx.channel.clone(name = None, reason = reason)
+        await ctx.channel.delete(reason = reason)
+
 def setup(client):
     client.add_cog(Moderation(client))
