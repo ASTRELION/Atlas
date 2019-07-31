@@ -54,6 +54,8 @@ class Utility(commands.Cog):
         return embed
 
     @commands.command("help")
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(send_messages = True)
     async def help(self, ctx, page: typing.Optional[int] = 1):
         """Display commands ordered by module"""
         helpMessage = await ctx.send(embed = self.help_helper(page, ctx.author.id))
@@ -80,11 +82,15 @@ class Utility(commands.Cog):
                 pass
             
     @commands.command("ping")
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(send_messages = True)
     async def ping(self, ctx):
         latency = self.client.latency
         await ctx.send("Pong! *{}ms*".format(round(latency * 1000)))
 
     @commands.command("botinfo")
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(administrator = True)
     async def botinfo(self, ctx):
         """Display information about the bot"""
         app = await self.client.application_info()
@@ -168,6 +174,9 @@ class Utility(commands.Cog):
         await ctx.send(embed = embed)
 
     @commands.command("serverinfo")
+    @commands.guild_only()
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(administrator = True)
     async def serverinfo(self, ctx, guildID: typing.Optional[int] = None):
         """Display server information"""
         if (guildID is None or guildID not in (g.id for g in self.client.guilds)): 
@@ -251,6 +260,8 @@ class Utility(commands.Cog):
         await ctx.send(embed = embed)
 
     @commands.command("userinfo")
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(send_messages = True)
     async def userinfo(self, ctx, user: typing.Optional[discord.Member] = None):
         """Get information about your user or given user ID"""
         if (user == None): 
@@ -316,6 +327,8 @@ class Utility(commands.Cog):
         await ctx.send(embed = embed)
 
     @commands.command("invite")
+    @commands.bot_has_permissions(create_instant_invite = True)
+    @commands.has_permissions(create_instant_invite = True)
     async def invite(self, ctx):
         """Generate an invite to this server"""
         invites = await ctx.guild.invites()

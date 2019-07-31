@@ -13,24 +13,36 @@ class Moderation(commands.Cog, name = "Moderation"):
         self.config = client.config
 
     @commands.command("kick")
+    @commands.guild_only()
+    @commands.bot_has_permissions(kick_members = True)
+    @commands.has_permissions(kick_members = True)
     async def kick(self, ctx, user: discord.User, *, reason: typing.Optional[str] = None):
         """Kick given user from the server"""
         guild = ctx.guild
         await guild.kick(user, reason = reason)
 
     @commands.command("ban")
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members = True)
+    @commands.has_permissions(ban_members = True)
     async def ban(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Ban given user from the server"""
         guild = ctx.guild
         await guild.ban(user, reason = reason)
 
     @commands.command("unban")
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members = True)
+    @commands.has_permissions(ban_members = True)
     async def unban(self, ctx, user: discord.User, *, reason: typing.Optional[str] = None):
         """Unban given user from the server"""
         guild = ctx.guild
         await guild.unban(user, reason = reason)
 
     @commands.command("softban")
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members = True)
+    @commands.has_permissions(ban_members = True)
     async def softban(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Ban and immediately unban given user from the server"""
         guild = ctx.guild
@@ -38,22 +50,34 @@ class Moderation(commands.Cog, name = "Moderation"):
         await guild.unban(user, reason = "SOFTBAN: {0}".format(reason))
 
     @commands.group("mute")
+    @commands.guild_only()
+    @commands.bot_has_permissions(mute_members = True)
+    @commands.has_permissions(mute_members = True)
     async def mute(self, ctx):
         if (ctx.invoked_subcommand is None): # No subcommand implementation
             await ctx.send("Please use !mute voice or !mute text")
         
     @mute.command("voice") #mute voice
+    @commands.guild_only()
+    @commands.bot_has_permissions(mute_members = True)
+    @commands.has_permissions(mute_members = True)
     async def mutevoice(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Prevent given user from speaking in voice channels"""
         await user.edit(mute = True, reason = reason)
 
     @mute.command("text") #mute text
+    @commands.guild_only()
+    @commands.bot_has_permissions(mute_members = True)
+    @commands.has_permissions(mute_members = True)
     async def mutetext(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Prevent given user from typing in text channels"""
         for channel in ctx.guild.text_channels:
             await channel.set_permissions(user, send_messages = False, reason = reason)
 
     @commands.command("unmute")
+    @commands.guild_only()
+    @commands.bot_has_permissions(mute_members = True)
+    @commands.has_permissions(mute_members = True)
     async def unmute(self, ctx, user: discord.Member):
         """Unmute given user and restore speaking and typing capabilities"""
         try:
@@ -65,6 +89,9 @@ class Moderation(commands.Cog, name = "Moderation"):
             await channel.set_permissions(user, send_messages = None, reason = "Unmuted {0}".format(user))
 
     @commands.command("banlist")
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members = True)
+    @commands.has_permissions(ban_members = True)
     async def banlist(self, ctx):
         """List all currently active bans in this server"""
         bans = await ctx.guild.bans()
@@ -80,12 +107,15 @@ class Moderation(commands.Cog, name = "Moderation"):
         await ctx.send(embed = embed)
 
     @commands.command("clear")
+    @commands.bot_has_permissions(manage_messages = True)
+    @commands.has_permissions(manage_messages = True)
     async def clear(self, ctx):
         """Send a blank message to clear chat"""
         blank = "\n\u200B" * 50
         await ctx.send(blank + "`Chat cleared by {0}`".format(ctx.author))
 
     @commands.command("purge")
+    @commands.guild_only()
     @commands.bot_has_permissions(manage_channels = True)
     @commands.has_permissions(manage_channels = True)
     async def purge(self, ctx, *, reason: typing.Optional[str] = None):
