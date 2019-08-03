@@ -85,16 +85,17 @@ class Utility(commands.Cog):
     @commands.bot_has_permissions(send_messages = True)
     @commands.has_permissions(send_messages = True)
     async def ping(self, ctx):
+        """Ping the bot"""
         latency = self.client.latency
         await ctx.send("Pong! *{}ms*".format(round(latency * 1000)))
 
     @commands.command("botinfo")
     @commands.bot_has_permissions(send_messages = True)
-    @commands.has_permissions(administrator = True)
+    @commands.has_permissions(send_messages = True)
     async def botinfo(self, ctx):
         """Display information about the bot"""
         app = await self.client.application_info()
-        botMember = discord.utils.find(lambda m: m.id == self.client.user.id, ctx.guild.members)
+        botMember = self.client.user
 
         embed = discord.Embed(
             description = app.description,
@@ -114,13 +115,13 @@ class Utility(commands.Cog):
         
         embed.add_field(
             name = ":large_blue_circle: Status",
-            value = botMember.status,
+            value = "Online",
             inline = True
         )
 
         embed.add_field(
             name = ":video_game: Activity",
-            value = botMember.activity,
+            value = self.client.activity,
             inline = True
         )
 
