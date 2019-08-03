@@ -6,7 +6,7 @@ import json
 import time
 from collections import namedtuple
 
-class AtlasClient(commands.Bot):
+class AtlasClient(commands.AutoShardedBot):
     """Custom Atlas Client inheriting Bot"""
 
     def __init__(self):
@@ -46,6 +46,9 @@ class AtlasClient(commands.Bot):
                 print(">> Loaded {0} module".format(module))
 
         print("> Loaded {0} module(s)".format(len(self.config["modules"])))
+        app = await self.application_info()
+        await self.user.edit(username = app.name)
+        print("> Username set as \"{0}\"".format(app.name))
 
     # Fires when bot is ready to receive commands
     async def on_ready(self):
@@ -72,9 +75,12 @@ class AtlasClient(commands.Bot):
 
         self.botStats.commands_processed += 1
 
-    async def on_command_error(self, ctx, exception):
+    async def on_command_error(self, ctx, error):
         """Handle error"""
-        print(exception)
+        if(isinstance(error, commands.MissingPermissions)):
+            await ctx.send("Cannot access command.")
+        else:
+            print(error)
 
 # Connect & Login
 try:
