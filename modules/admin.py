@@ -14,10 +14,7 @@ class Admin(commands.Cog):
     async def setactivity(self, ctx, *, activity):
         """Set the bot playing status"""
         self.config["activity"] = activity
-
-        with open('config.json', 'w', encoding='utf-8') as json_config:
-            json.dump(self.config, json_config, ensure_ascii = False, indent = 4)
-
+        self.client.write_config(self.config)
         await self.client.change_presence(activity = discord.Game(self.config["activity"]))
 
     @commands.command("reload")

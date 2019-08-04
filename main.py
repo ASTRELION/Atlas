@@ -9,9 +9,10 @@ from collections import namedtuple
 class AtlasClient(commands.AutoShardedBot):
     """Custom Atlas Client inheriting Bot"""
 
+    ## SETUP ##
     def __init__(self):
         # Load Configuration
-        self.config = self.read_data("config.json")
+        self.config = self.read_config()
         
         # Init bot
         super().__init__(
@@ -36,16 +37,59 @@ class AtlasClient(commands.AutoShardedBot):
 
         logging.basicConfig(level = logging.WARNING)
 
-    def write_data(self, data, file_path):
+    # IO Config
+    def write_config(self, data):
         """Write data to file with specified config"""
-        with open("data/" + file_path, "w", encoding = "utf-8") as json_file:
+        with open("data/config.json", "w", encoding = "utf-8") as json_file:
             json.dump(data, json_file, ensure_ascii = False, indent = 4)
 
-    def read_data(self, file_path):
+    def read_config(self):
         """Read data from file to specified config"""
-        with open("data/" + file_path) as json_file:
-            return json.load(json_file)
+        try:
+            with open("data/config.json") as json_file:
+                return json.load(json_file)
+        except FileNotFoundError:
+            print("Configuration file not found. Please create /data/config.json.")
 
+    # IO Guild
+    def write_guild(self, data, guild: discord.Guild):
+        """Write guild and guild preferences to file"""
+        with open("data/guilds/g{0}.json".format(guild.id), "w", encoding = "utf-8") as json_file:
+            return json.dump(data, json_file, ensure_ascii = False, indent = 4)
+
+    def read_guild(self, guild: discord.Guild):
+        """Read guild and guild preferences from file"""
+        try:
+            with open("data/guilds/g{0}.json".format(guild.id), "w", encoding = "utf-8") as json_file:
+                return json.load(json_file)
+        except IOError:
+            # Create default file if it does not exist
+            guildData = {
+                "id": guild.id,
+                "name": guild.name
+            }
+            return self.write_guild(guildData, guild)
+
+    # IO User
+    def write_user(self, data, member: discord.User):
+        """Write user and user preferences to file"""
+        with open("data/users/u{0}.json".format(member.id), "w", encoding = "utf-8") as json_file:
+            json.dump(data, json_file, ensure_ascii = False, indent = 4)
+
+    def read_user(self, member: discord.User):
+        """Read user and user preferences from file"""
+        try:
+            with open("data/users/u{0}.json".format(member.id), "w", encoding = "utf-8") as json_file:
+                return json.load(json_file)
+        except IOError:
+            # Create default file if it does not exist
+            userData = {
+                "id": member.id,
+                "name": member.name,
+            }
+            self.write_user(userData, member)
+
+    ## EVENTS ##
     # Fires when bot logs in
     async def on_connect(self):
         """Prepare bot modules and data"""
@@ -64,8 +108,14 @@ class AtlasClient(commands.AutoShardedBot):
         print("> Logged in as {0.user}".format(client))
         print("> Command prefix \'{0}\'".format(client.config["prefix"]))
 
-        for guild in client.guilds:
+        # Setup guild files
+        for guild in self.guilds:
+            guildData = self.read_guild(guild)
             print(">> Connected to guild \"{0}\" -- {1} users".format(guild.name, len(guild.members)))
+
+        # Setup user files
+        for user in self.users:
+            userData = self.read_user(user)
 
         print("> Connected to {0} guild(s) -- {1} user(s)".format(len(client.guilds), len(client.users)))
 
@@ -90,7 +140,7 @@ class AtlasClient(commands.AutoShardedBot):
         else:
             print(error)
 
-# Connect & Login
+## CONNECT & LOGIN ##
 try:
     # client.run(client.config["token"], bot = True, reconnect = True)
     client = AtlasClient()
