@@ -11,9 +11,7 @@ class AtlasClient(commands.AutoShardedBot):
 
     def __init__(self):
         # Load Configuration
-        self.config = {}
-        with open("data/config.json") as json_config:
-            self.config = json.load(json_config)
+        self.config = self.read_data("config.json")
         
         # Init bot
         super().__init__(
@@ -37,6 +35,16 @@ class AtlasClient(commands.AutoShardedBot):
         self.botStats = botStats
 
         logging.basicConfig(level = logging.WARNING)
+
+    def write_data(self, data, file_path):
+        """Write data to file with specified config"""
+        with open("data/" + file_path, "w", encoding = "utf-8") as json_file:
+            json.dump(data, json_file, ensure_ascii = False, indent = 4)
+
+    def read_data(self, file_path):
+        """Read data from file to specified config"""
+        with open("data/" + file_path) as json_file:
+            return json.load(json_file)
 
     # Fires when bot logs in
     async def on_connect(self):
