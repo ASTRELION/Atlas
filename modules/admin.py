@@ -25,5 +25,17 @@ class Admin(commands.Cog):
         self.client.reload_extension("modules.{0}".format(module))
         await ctx.send("{0} module reloaded.".format(module))
 
+    @commands.command("users")
+    @commands.has_permissions(administrator = True)
+    async def users(self, ctx):
+        """List all users in the guild file associated with this server"""
+        data = self.client.read_guild(ctx.guild)
+
+        userList = ""
+        for id in data["users"]:
+            userList += "{0}\n".format(str(self.client.get_user(id)))
+
+        await ctx.send(userList)
+
 def setup(client):
     client.add_cog(Admin(client))
