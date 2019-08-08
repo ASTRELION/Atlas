@@ -61,7 +61,7 @@ class Moderation(commands.Cog, name = "Moderation"):
     @commands.guild_only()
     @commands.bot_has_permissions(mute_members = True)
     @commands.has_permissions(mute_members = True)
-    async def mutevoice(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
+    async def mute_voice(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Prevent given user from speaking in voice channels"""
         await user.edit(mute = True, reason = reason)
 
@@ -69,7 +69,7 @@ class Moderation(commands.Cog, name = "Moderation"):
     @commands.guild_only()
     @commands.bot_has_permissions(mute_members = True)
     @commands.has_permissions(mute_members = True)
-    async def mutetext(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
+    async def mute_text(self, ctx, user: discord.Member, *, reason: typing.Optional[str] = None):
         """Prevent given user from typing in text channels"""
         for channel in ctx.guild.text_channels:
             await channel.set_permissions(user, send_messages = False, reason = reason)
@@ -122,6 +122,60 @@ class Moderation(commands.Cog, name = "Moderation"):
         """Delete this channel and clone it anew"""
         await ctx.channel.clone(name = None, reason = reason)
         await ctx.channel.delete(reason = reason)
+
+    @commands.group("helpop")
+    @commands.guild_only()
+    async def helpop(self, ctx):
+        """Send a dm to all registered op users"""
+        if (ctx.invoked_subcommand is None):
+            await ctx.send("Please use in conjunction with a subcommand.")
+
+    @helpop.command("msg")
+    @commands.guild_only()
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(send_messages = True)
+    @commands.cooldown(1, 5 * 60, commands.BucketType.user)
+    async def helpop_msg(self, ctx, *, message):
+        guildData = self.client.read_guild(ctx.guild)
+        if ("helpop_users" in guildData):
+            for id in guildData["helpop_users"]:
+                op = ctx.guild.get_member(id)
+                dmChannel = op.dm_channel or await op.create_dm()
+                await dmChannel.send("**{0} ({1}) via helpop:**\n{2}".format(
+                    ctx.author, 
+                    ctx.guild.name,
+                    message))
+
+    @helpop.command("add")
+    @commands.guild_only()
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(administrator = True)
+    async def helpop_add(self, ctx, user: discord.Member):
+        """Add user to list of helpop enabled users"""
+        guildData = self.client.read_guild(ctx.guild)
+
+        if ("helpop_users" in guildData and user.id not in guildData["helpop_users"]): # Add to set
+            guildData["helpop_users"].append(user.id)
+        elif ("helpop_users" not in guildData): # Create new set
+            guildData["helpop_users"] = [user.id]
+        
+        self.client.write_guild(guildData, ctx.guild)
+
+    @helpop.command("del")
+    @commands.guild_only()
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(administrator = True)
+    async def helpop_del(self, ctx, user: discord.Member):
+        """Remove user from list of helpop enabled users"""
+        guildData = self.client.read_guild(ctx.guild)
+
+        if ("helpop_users" in guildData and user.id in guildData["helpop_users"]):
+            guildData["helpop_users"].remove(user.id)
+            print(guildData["helpop_users"])
+        else:
+            await ctx.send("Specified user is not an op.")
+
+        self.client.write_guild(guildData, ctx.guild)
 
 def setup(client):
     client.add_cog(Moderation(client))

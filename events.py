@@ -44,8 +44,9 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         """Process command if valid"""
+        # Validate message as command
         if (message.author == self.client.user or 
-            not message.content.startswith(self.config["prefix"])): # Ignore messages sent by itself
+                not message.content.startswith(self.config["prefix"])):
             return
 
         # Handle command using modules
@@ -63,8 +64,11 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         """Handle error"""
+        print("{0} tried to use \"{1}\" in server \"{2}\"".format(ctx.author, ctx.message.content, "a"))
         if(isinstance(error, commands.MissingPermissions)):
-            await ctx.send("Cannot access command.")
+            await ctx.send("You are missing the following permission(s): {0}".format(",".join(error.missing_perms)))
+        elif(isinstance(error, commands.CommandOnCooldown)):
+            await ctx.send("You must wait {0} seconds before using that command again.".format(int(error.retry_after)))
         else:
             print(error)
 
