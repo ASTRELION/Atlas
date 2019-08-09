@@ -12,19 +12,24 @@ class Utility(commands.Cog):
         self.client = client
         self.config = client.config
 
-    def help_helper(self, page, userID):
+    def filter_cogs(self, cogs):
+        for cog in cogs.values():
+            if (len(cog.get_commands()) > 0): yield cog
+
+    def help_builder(self, page, userID):
         """Generates embed for the help command"""
         page -= 1 # Adjust for indexing
-        if (page >= len(self.client.cogs)): page = 0
-        names = list(self.client.cogs)
-        cog = self.client.cogs[names[page]]
-
+        cogs = list(self.filter_cogs(self.client.cogs))
+        if (page >= len(cogs)): page = 0
+        names = list(x.qualified_name for x in cogs)
+        cog = cogs[page]
+        
         cmds = ""
         embed = discord.Embed(
             title = "**{0} Commands** | {1} Help - {2}".format(cog.qualified_name, self.client.user.name, userID),
             color = self.client.color
         )
-
+        
         for cmd in cog.get_commands():
             if (not isinstance(cmd, commands.core.Group)): # Commands without groups
                 cmds += "**{0}{1} {2}** -- {3}\n".format(
@@ -58,14 +63,16 @@ class Utility(commands.Cog):
     @commands.has_permissions(send_messages = True)
     async def help(self, ctx, page: typing.Optional[int] = 1):
         """Display commands ordered by module"""
-        helpMessage = await ctx.send(embed = self.help_helper(page, ctx.author.id))
+        helpMessage = await ctx.send(embed = self.help_builder(page, ctx.author.id))
         
         # Messily add page reaction buttons
-        for i in range(len(self.client.cogs)):
+        for i in range(len(list(self.filter_cogs(self.client.cogs)))):
             charBytes = b"\u003%d\u20E3" % (i + 1)
             emoteString = charBytes.decode("unicode_escape")
             await helpMessage.add_reaction(emoteString)
 
+    # Fires everytime a reaction is added to a message
+    # Used to page through help command
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         """Change help page"""
@@ -75,7 +82,7 @@ class Utility(commands.Cog):
                 str(user.id) in reaction.message.embeds[0].title):
             try:
                 pageNum = int(str(str.encode(reaction.emoji))[2])
-                embed = self.help_helper(pageNum, user.id)
+                embed = self.help_builder(pageNum, user.id)
                 await reaction.message.edit(embed = embed)
                 await reaction.remove(user)
             except:
