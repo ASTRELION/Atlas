@@ -30,25 +30,37 @@ class AtlasClient(commands.AutoShardedBot):
         )
 
         # Init bot stats
-        botStats = namedtuple("botStats", "start_time commands_processed")
-        botStats.start_time = time.time()
-        botStats.commands_processed = 0
-        self.botStats = botStats
+        self.botStats = namedtuple("botStats", "start_time commands_processed")
+        self.botStats.start_time = time.time()
+        self.botStats.commands_processed = 0
 
-        logging.basicConfig(level = logging.WARNING)
+        # Setup logging
+        self.logger = logging.getLogger("Atlas") # Create/return AtlasClient logger
+        self.logger.setLevel(logging.DEBUG)
 
-        extensions = {
-            "events",
-            "modules.admin",
-            "modules.moderation",
-            "modules.utility"
-        }
+        fh = logging.FileHandler("atlas.log")
+        fh.setLevel(logging.DEBUG)
 
-        for ext in extensions:
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+
+        formatter = logging.Formatter(
+            "%(asctime)s:%(name)s:%(levelname)s$ %(message)s", 
+            "%Y-%m-%d::%H:%M:%S"
+        )
+        
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        self.logger.addHandler(fh)
+        self.logger.addHandler(ch)
+
+        # Load Extensions
+        self.logger.warning("Loading extensions...")
+        for ext in self.config["extensions"]:
             self.load_extension(ext)
-            print(">> Loaded {0} extension".format(ext))
+            self.logger.info("Loaded extension \"{0}\"".format(ext))
 
-        print("> Loaded {0} extensions(s)".format(len(extensions)))
+        self.logger.info("Loaded {0} extensions(s)".format(len(self.config["extensions"])))
 
     # IO Config
     def write_config(self, data):
@@ -62,7 +74,7 @@ class AtlasClient(commands.AutoShardedBot):
             with open("data/config.json") as json_file:
                 return json.load(json_file)
         except FileNotFoundError:
-            print("Configuration file not found. Please create /data/config.json.")
+            self.logger.error("Configuration file not found. Please create /data/config.json.")
 
     # IO Guild
     def write_guild(self, data, guild: discord.Guild):
@@ -116,12 +128,15 @@ class AtlasClient(commands.AutoShardedBot):
 try:
     # client.run(client.config["token"], bot = True, reconnect = True)
     client = AtlasClient()
+    client.logger.warning("Logging in...")
     client.loop.run_until_complete(client.start(
         client.config["token"], 
         bot = True, 
         reconnect = True)
     )
 except KeyboardInterrupt:
+    client.logger.warning("Logging out...")
     client.loop.run_until_complete(client.logout())
 finally:
     client.loop.close()
+    client.logger.warning("-------------------- EOP --------------------")
