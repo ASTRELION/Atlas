@@ -13,7 +13,7 @@ class Games(commands.Cog):
         self.client = client
         self.config = client.config
 
-    @commands.command("roll")
+    @commands.command("roll", aliases = ["r"])
     async def roll(self, ctx, times: typing.Optional[int] = 1, sides: typing.Optional[int] = 6):
         """Roll a dice specified times with specified sides"""
         if (times * sides > 1000):
