@@ -43,6 +43,10 @@ class DnD(commands.Cog, name = "DnD"):
             "weapon-properties"
         }
 
+    def getAlphaNum(self, string: str):
+        """Return string as alpha-numeric only"""
+        return re.sub("[^0-9a-zA-Z]+", "", string)
+
     def getResource(self, resource: str):
         """Returns given resource from the DnD API"""
         req = requests.get(self.dndAPI + resource.lower()).json()
@@ -51,15 +55,15 @@ class DnD(commands.Cog, name = "DnD"):
     def findByName(self, resource: list, name: str):
         """Return list of resources matching given name"""
         # s = re.sub('[^0-9a-zA-Z]+', '*', s)
-        name = re.sub("[^0-9a-zA-Z]+", "", name.lower())
+        name = self.getAlphaNum(name).lower()
         results = []
 
         for i in resource:
             item = None
             try:
-                item = re.sub("[^0-9a-zA-Z]+", "", (i["name"]).lower())
+                item = self.getAlphaNum(i["name"]).lower()
             except KeyError:
-                item = re.sub("[^0-9a-zA-Z]+", "", (i["class"]).lower())
+                item = self.getAlphaNum(i["class"]).lower()
 
             if (name in item):
                     req = requests.get(i["url"]).json()
@@ -72,7 +76,7 @@ class DnD(commands.Cog, name = "DnD"):
         self.client.logger.warning("Starting DnD database update...")
         for r in self.resources:
             # Create resource .json
-            rName = re.sub("[^0-9a-zA-Z]+", "", r.lower())
+            rName = self.getAlphaNum(r).lower()
             with open(self.client.DND_LOC + "{0}.json".format(rName), "w", encoding = "utf-8") as json_file:
                 json.dump(self.getResource(r), json_file, ensure_ascii = False, indent = 4)
 
@@ -80,11 +84,11 @@ class DnD(commands.Cog, name = "DnD"):
             os.makedirs(self.client.DND_LOC + "{0}/".format(rName), exist_ok = True)
             for i in self.getResource(r):
                 try:
-                    iName = re.sub("[^0-9a-zA-Z]+", "", i["name"].lower())
+                    iName = self.getAlphaNum(i["name"]).lower()
                     with open(self.client.DND_LOC + "{0}/{1}.json".format(rName, iName), "w", encoding = "utf-8") as json_file:
                         json.dump(requests.get(i["url"]).json(), json_file, ensure_ascii = False, indent = 4)
                 except KeyError:
-                    iName = re.sub("[^0-9a-zA-Z]+", "", i["class"].lower())
+                    iName = self.getAlphaNum(i["class"]).lower()
                     with open(self.client.DND_LOC + "{0}/{1}.json".format(rName, iName), "w", encoding = "utf-8") as json_file:
                         json.dump(requests.get(i["url"]).json(), json_file, ensure_ascii = False, indent = 4)
         
