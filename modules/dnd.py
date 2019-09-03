@@ -49,16 +49,19 @@ class DnD(commands.Cog, name = "DnD"):
 
     def getResource(self, resource: str):
         """Returns given resource from the DnD API"""
-        req = requests.get(self.dndAPI + resource.lower()).json()
-        return req["results"]
+        # req = requests.get(self.dndAPI + resource.lower()).json()
+        # return req["results"]
+        with open(self.client.DND_LOC + "{0}.json".format(self.getAlphaNum(resource).lower())) as json_file:
+            return json.load(json_file)
 
-    def findByName(self, resource: list, name: str):
+    def findByName(self, resource: str, name: str):
         """Return list of resources matching given name"""
         # s = re.sub('[^0-9a-zA-Z]+', '*', s)
         name = self.getAlphaNum(name).lower()
+        resource = self.getAlphaNum(resource).lower()
         results = []
 
-        for i in resource:
+        for i in self.getResource(resource):
             item = None
             try:
                 item = self.getAlphaNum(i["name"]).lower()
@@ -66,7 +69,9 @@ class DnD(commands.Cog, name = "DnD"):
                 item = self.getAlphaNum(i["class"]).lower()
 
             if (name in item):
-                    req = requests.get(i["url"]).json()
+                # req = requests.get(i["url"]).json()
+                with open(self.client.DND_LOC + "{0}/{1}.json".format(resource, item)) as json_file:
+                    req = json.load(json_file)
                     results.append(req)
 
         return results
@@ -111,8 +116,8 @@ class DnD(commands.Cog, name = "DnD"):
         )
 
         for r in self.resources:
-            resource = self.getResource(r)
-            data = self.findByName(resource, keyword)
+            # resource = self.getResource(r)
+            data = self.findByName(r, keyword)
 
             if (len(data) > 0):
                 results = "\u200B"
@@ -148,8 +153,8 @@ class DnD(commands.Cog, name = "DnD"):
     @commands.command("dspell")
     async def dspell(self, ctx, *, spell: str):
         """Search for a DnD (5e) spell with given name"""
-        spells = self.getResource("spells")
-        spellData = self.findByName(spells, spell)
+        # spells = self.getResource("spells")
+        spellData = self.findByName("spells", spell)
 
         for s in spellData:
             embed = discord.Embed(
