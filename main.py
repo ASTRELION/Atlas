@@ -5,12 +5,24 @@ import logging
 import json
 import time
 from collections import namedtuple
+import util
+import os
 
 class AtlasClient(commands.AutoShardedBot):
     """Custom Atlas Client inheriting Bot"""
 
     ## SETUP ##
     def __init__(self):
+        self.DATA_LOC = ".data/"
+        self.USER_LOC = self.DATA_LOC + "users/"
+        self.GUILD_LOC = self.DATA_LOC + "guilds/"
+        self.DND_LOC = self.DATA_LOC + "dnd/"
+
+        os.makedirs(self.DATA_LOC, exist_ok = True)
+        os.makedirs(self.USER_LOC, exist_ok = True)
+        os.makedirs(self.GUILD_LOC, exist_ok = True)
+        os.makedirs(self.DND_LOC, exist_ok = True)
+
         # Load Configuration
         self.config = self.read_config()
         
@@ -65,13 +77,13 @@ class AtlasClient(commands.AutoShardedBot):
     # IO Config
     def write_config(self, data):
         """Write data to file with specified config"""
-        with open("data/config.json", "w", encoding = "utf-8") as json_file:
+        with open(self.DATA_LOC + "config.json", "w", encoding = "utf-8") as json_file:
             json.dump(data, json_file, ensure_ascii = False, indent = 4)
 
     def read_config(self):
         """Read data from file to specified config"""
         try:
-            with open("data/config.json") as json_file:
+            with open(self.DATA_LOC + "config.json") as json_file:
                 return json.load(json_file)
         except FileNotFoundError:
             self.logger.error("Configuration file not found. Please create /data/config.json.")
@@ -86,14 +98,17 @@ class AtlasClient(commands.AutoShardedBot):
         data["text_channels"] = len(guild.text_channels)
         data["voice_channels"] = len(guild.voice_channels)
         data["users"] = list(u.id for u in guild.members)
+        data["helpop_users"] = util.check_dict(data, "helpop_users", [guild.owner_id])
+        data["private_voice"] = util.check_dict(data, "private_voice", {})
+        data["private_category"] = util.check_dict(data, "private_category", None)
         # Write
-        with open("data/guilds/g{0}.json".format(guild.id), "w", encoding = "utf-8") as json_file:
+        with open(self.GUILD_LOC + "g{0}.json".format(guild.id), "w", encoding = "utf-8") as json_file:
             json.dump(data, json_file, ensure_ascii = False, indent = 4)
 
     def read_guild(self, guild: discord.Guild):
         """Read guild and guild preferences from file"""
         try:
-            with open("data/guilds/g{0}.json".format(guild.id)) as json_file:
+            with open(self.GUILD_LOC + "g{0}.json".format(guild.id)) as json_file:
                 return json.load(json_file)
         except FileNotFoundError:
             # Create default file if it does not exist
@@ -108,13 +123,13 @@ class AtlasClient(commands.AutoShardedBot):
         data["id"] = user.id
         data["name"] = str(user)
         # Write
-        with open("data/users/u{0}.json".format(user.id), "w", encoding = "utf-8") as json_file:
+        with open(self.USER_LOC + "u{0}.json".format(user.id), "w", encoding = "utf-8") as json_file:
             json.dump(data, json_file, ensure_ascii = False, indent = 4)
 
     def read_user(self, user: discord.User):
         """Read user and user preferences from file"""
         try:
-            with open("data/users/u{0}.json".format(user.id)) as json_file:
+            with open(self.USER_LOC + "u{0}.json".format(user.id)) as json_file:
                 return json.load(json_file)
         except FileNotFoundError:
             # Create default file if it does not exist

@@ -4,6 +4,8 @@ import json
 import datetime
 import time
 import typing
+import traceback
+import sys
 
 class Events(commands.Cog):
     """Event handlers"""
@@ -65,13 +67,15 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         """Handle error"""
-        self.client.logger.info("{0} tried to use \"{1}\" in server \"{2}\"".format(ctx.author, ctx.message.content, "a"))
+        self.client.logger.error("{0} tried to use \"{1}\" in server \"{2}\"".format(ctx.author, ctx.message.content, ""))
         if(isinstance(error, commands.MissingPermissions)):
             await ctx.send("ERROR: You are missing the following permission(s): {0}".format(",".join(error.missing_perms)))
         elif(isinstance(error, commands.CommandOnCooldown)):
             await ctx.send("ERROR: You must wait {0} seconds before using that command again.".format(int(error.retry_after)))
+        elif(isinstance(error, commands.ExtensionError)):
+            await ctx.send("ERROR: Extension was not found or could not be loaded.")
         else:
-            self.client.logger.info(error)
+            self.client.logger.error(error)
 
 def setup(client):
     client.add_cog(Events(client))

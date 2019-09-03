@@ -137,14 +137,13 @@ class Moderation(commands.Cog, name = "Moderation"):
     @commands.cooldown(1, 5 * 60, commands.BucketType.user)
     async def helpop_msg(self, ctx, *, message):
         guildData = self.client.read_guild(ctx.guild)
-        if ("helpop_users" in guildData):
-            for id in guildData["helpop_users"]:
-                op = ctx.guild.get_member(id)
-                dmChannel = op.dm_channel or await op.create_dm()
-                await dmChannel.send("**{0} ({1}) via helpop:**\n{2}".format(
-                    ctx.author, 
-                    ctx.guild.name,
-                    message))
+        for id in guildData["helpop_users"]:
+            op = ctx.guild.get_member(id)
+            dmChannel = op.dm_channel or await op.create_dm()
+            await dmChannel.send("**{0} ({1}) via helpop:**\n{2}".format(
+                ctx.author, 
+                ctx.guild.name,
+                message))
 
     @helpop.command("add")
     @commands.guild_only()
@@ -154,10 +153,8 @@ class Moderation(commands.Cog, name = "Moderation"):
         """Add user to list of helpop enabled users"""
         guildData = self.client.read_guild(ctx.guild)
 
-        if ("helpop_users" in guildData and user.id not in guildData["helpop_users"]): # Add to set
+        if (user.id not in guildData["helpop_users"]): # Add to set
             guildData["helpop_users"].append(user.id)
-        elif ("helpop_users" not in guildData): # Create new set
-            guildData["helpop_users"] = [user.id]
         
         self.client.write_guild(guildData, ctx.guild)
 
@@ -169,7 +166,7 @@ class Moderation(commands.Cog, name = "Moderation"):
         """Remove user from list of helpop enabled users"""
         guildData = self.client.read_guild(ctx.guild)
 
-        if ("helpop_users" in guildData and user.id in guildData["helpop_users"]):
+        if (user.id in guildData["helpop_users"]):
             guildData["helpop_users"].remove(user.id)
             print(guildData["helpop_users"])
         else:

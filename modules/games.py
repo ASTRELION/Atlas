@@ -20,13 +20,13 @@ class Games(commands.Cog):
             await ctx.send("*ERROR: `Number of rolls x dice sides` should be less than 1000*")
             return
 
-        rollStrings = []
+        rolls = []
         rollSum = 0
         rollProduct = 1
 
         for i in range(times):
             roll = random.randint(1, sides)
-            rollStrings.append(str(roll))
+            rolls.append(roll)
             rollSum += roll
             rollProduct *= roll
         
@@ -34,11 +34,13 @@ class Games(commands.Cog):
             ctx.author.mention, 
             times, 
             sides)
-        result += "\n**{0}**\n".format(", ".join(rollStrings))
-        result += "`Sum: {0}`\n`Product: {1}`\n`Average: {2}`".format(
+        result += "\n**{0}**\n".format(", ".join(str(r) for r in rolls))
+        result += "`Sum: {0}`\n`Product: {1}`\n`Average: {2}`\n`w/ Advantage: {3}`\n`w/ Disadvantage: {4}`".format(
             rollSum,
             rollProduct,
-            round(rollSum / len(rollStrings), 2))
+            round(rollSum / len(rolls), 2),
+            max(rolls),
+            min(rolls))
         await ctx.send(result)        
 
 def setup(client):
