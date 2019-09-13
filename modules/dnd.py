@@ -4,10 +4,10 @@ import json
 import datetime
 import time
 import typing
-import requests
 import re
 import os
 from threading import Thread
+import aiohttp
 
 def setup(client):
     client.add_cog(DnD(client))
@@ -76,36 +76,58 @@ class DnD(commands.Cog, name = "DnD"):
 
         return results
 
-    def update_database(self):
+    def getResourceContent(self, resource: str):
+        """Return list of all content in a resource"""
+        resource = self.getAlphaNum(resource).lower()
+        result = []
+        for file in os.listdir(self.client.DND_LOC + resource):
+            with open(self.client.DND_LOC + "{}/{}".format(resource, file)) as json_file:
+                req = json.load(json_file)
+                result.append(req)
+
+        return result
+
+    async def update_database(self):
         """Update local DnD data"""
         self.client.logger.warning("Starting DnD database update...")
         for r in self.resources:
             # Create resource .json
+            # Fetch online resource
+            res = None
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.dndAPI + r) as ses:
+                    if ses.status == 200:
+                        res = await ses.json()
+                        res = res["results"]
+
             rName = self.getAlphaNum(r).lower()
             with open(self.client.DND_LOC + "{0}.json".format(rName), "w", encoding = "utf-8") as json_file:
-                json.dump(self.getResource(r), json_file, ensure_ascii = False, indent = 4)
+                json.dump(res, json_file, ensure_ascii = False, indent = 4)
 
             # Populate resource folder with data
             os.makedirs(self.client.DND_LOC + "{0}/".format(rName), exist_ok = True)
-            for i in self.getResource(r):
+            for i in res:
+                item = None
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(i["url"]) as ses:
+                        if ses.status == 200:
+                            item = await ses.json()
                 try:
                     iName = self.getAlphaNum(i["name"]).lower()
                     with open(self.client.DND_LOC + "{0}/{1}.json".format(rName, iName), "w", encoding = "utf-8") as json_file:
-                        json.dump(requests.get(i["url"]).json(), json_file, ensure_ascii = False, indent = 4)
+                        json.dump(item, json_file, ensure_ascii = False, indent = 4)
                 except KeyError:
                     iName = self.getAlphaNum(i["class"]).lower()
                     with open(self.client.DND_LOC + "{0}/{1}.json".format(rName, iName), "w", encoding = "utf-8") as json_file:
-                        json.dump(requests.get(i["url"]).json(), json_file, ensure_ascii = False, indent = 4)
+                        json.dump(item, json_file, ensure_ascii = False, indent = 4)
         
         self.client.logger.warning("Dnd database update complete.")
 
     @commands.command("dupdate")
     async def dupdate(self, ctx):
         """Update local DnD data"""
-        thread = Thread(target = self.update_database)
-        thread.start()
-        # thread.join()
         await ctx.send("Update in progress. Please allow a few minutes for the database to download.")
+        await self.update_database()
 
     @commands.command("dsearch")
     async def dsearch(self, ctx, *, keyword: str):
@@ -224,3 +246,78 @@ class DnD(commands.Cog, name = "DnD"):
             )
 
             await ctx.send(embed = embed)
+
+    @commands.command("dcreate")
+    async def dchar(self, ctx):
+        """Create a new DnD character"""
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        charName = None
+        charRace = None
+        charClass = None
+
+        await ctx.send("{0}, you started creating a new Dungeons & Dragons character.".format(ctx.author))
+
+        # Character name
+        await ctx.send(">Choose a __character name__.")
+        msg = await self.client.wait_for("message", check = check, timeout = 60)
+        charName = msg.content
+        await ctx.send("*A character named **{0}** was born.*".format(charName))
+
+        # Race
+        races = list(x["name"] for x in self.getResourceContent("races"))
+
+        while (charRace is None):
+            await ctx.send(
+                ">Choose a __race__.\n" +
+                ">Choose __one__:\n" +
+                ">>" + ", ".join(races)
+            )
+            msg = await self.client.wait_for("message", check = check, timeout = 60)
+
+            for i in races:
+                if (self.getAlphaNum(msg.content).lower() in self.getAlphaNum(i).lower()):
+                    charRace = i
+
+        await ctx.send("*A **{0}** was born, with the name of **{1}***.".format(charRace, charName))
+
+        ## Sub-race
+        if (self.getAlphaNum(charRace).lower() in ["elf", "dwarf", "halfling"]):
+            races = list(x["name"] for x in self.getResourceContent("subraces") if charRace in x["name"])
+            charRace = None
+
+            while (charRace is None):
+                await ctx.send(
+                    ">Choose a __sub-race__.\n" +
+                    ">Choose __one__:\n" +
+                    ">>" + ", ".join(races)
+                )
+                msg = await self.client.wait_for("message", check = check, timeout = 60)
+
+                for i in races:
+                    if (self.getAlphaNum(msg.content).lower() in self.getAlphaNum(i).lower()):
+                        charRace = i
+
+            await ctx.send("*A **{0}** was born, with the name of **{1}***.".format(charRace, charName))
+
+        # Class
+        classes = list(x["name"] for x in self.getResourceContent("classes"))
+
+        while (charClass is None):
+            await ctx.send(
+                ">Choose a __class__.\n" +
+                ">Choose __one__:\n" +
+                ">>" + ", ".join(classes)
+            )
+            msg = await self.client.wait_for("message", check = check, timeout = 60)
+
+            for i in classes:
+                if (self.getAlphaNum(msg.content).lower() in self.getAlphaNum(i).lower()):
+                    charClass = i
+
+        await ctx.send("*A **{}** **{}** was born and given the name of **{}**.*".format(charRace, charClass, charName))
+
+        # 
+
+        await ctx.send("Congratulations {0}, your character is complete.".format(ctx.author))
