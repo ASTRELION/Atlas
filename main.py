@@ -6,22 +6,17 @@ import json
 import time
 from collections import namedtuple
 import util
-import os
 
 class AtlasClient(commands.AutoShardedBot):
     """Custom Atlas Client inheriting Bot"""
 
     ## SETUP ##
     def __init__(self):
+        # Data storage locations
         self.DATA_LOC = ".data/"
-        self.USER_LOC = self.DATA_LOC + "users/"
         self.GUILD_LOC = self.DATA_LOC + "guilds/"
+        self.USER_LOC = self.DATA_LOC + "users/"
         self.DND_LOC = self.DATA_LOC + "dnd/"
-
-        os.makedirs(self.DATA_LOC, exist_ok = True)
-        os.makedirs(self.USER_LOC, exist_ok = True)
-        os.makedirs(self.GUILD_LOC, exist_ok = True)
-        os.makedirs(self.DND_LOC, exist_ok = True)
 
         # Load Configuration
         self.config = self.read_config()

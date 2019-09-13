@@ -4,8 +4,6 @@ import json
 import datetime
 import time
 import typing
-import traceback
-import sys
 
 class Events(commands.Cog):
     """Event handlers"""
@@ -75,7 +73,7 @@ class Events(commands.Cog):
         elif(isinstance(error, commands.ExtensionError)):
             await ctx.send("ERROR: Extension was not found or could not be loaded.")
         else:
-            self.client.logger.error(error)
+            self.client.logger.info(error)
 
 def setup(client):
     client.add_cog(Events(client))
