@@ -4,3 +4,9 @@ def check_dict(dictionary, key, default_data):
         dictionary[key] = default_data
     
     return dictionary[key]
+
+def format_permission(permission: str, title: bool):
+    """Formats a permission string by removing underscores and optionally in title format"""
+    newPermission = permission.replace("_", " ")
+    if (title): newPermission = newPermission.title()
+    return newPermission

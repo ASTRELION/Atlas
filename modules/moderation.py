@@ -114,6 +114,18 @@ class Moderation(commands.Cog, name = "Moderation"):
         blank = "\n\u200B" * 50
         await ctx.send(blank + "`Chat cleared by {0}`".format(ctx.author))
 
+    @commands.command("announce")
+    @commands.bot_has_permissions(send_messages = True)
+    @commands.has_permissions(manage_messages = True)
+    async def announce(self, ctx, *, message: str):
+        """Announce a message to this channel via @everyone and an embed message"""
+        embed = discord.Embed(
+            title = "Announcement",
+            description = message
+        )
+
+        await ctx.send(ctx.guild, embed = embed)
+
     @commands.command("purge")
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channels = True)

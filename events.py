@@ -4,6 +4,7 @@ import json
 import datetime
 import time
 import typing
+import util
 
 class Events(commands.Cog):
     """Event handlers"""
@@ -64,16 +65,35 @@ class Events(commands.Cog):
     # Fires everytime an error occurs
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        """Handle error"""
-        self.client.logger.error("{0} tried to use \"{1}\" in server \"{2}\"".format(ctx.author, ctx.message.content, ""))
+        """Handles command errors with logging and error responses"""
+        self.client.logger.error("{0} tried to use \"{1}\" in server \"{2}\"".format(
+            ctx.author, 
+            ctx.message.content, 
+            "")
+        )
+        self.client.logger.info(error)
+
+        # User Missing Permission
         if(isinstance(error, commands.MissingPermissions)):
-            await ctx.send("ERROR: You are missing the following permission(s): {0}".format(",".join(error.missing_perms)))
-        elif(isinstance(error, commands.CommandOnCooldown)):
-            await ctx.send("ERROR: You must wait {0} seconds before using that command again.".format(int(error.retry_after)))
-        elif(isinstance(error, commands.ExtensionError)):
-            await ctx.send("ERROR: Extension was not found or could not be loaded.")
-        else:
-            self.client.logger.info(error)
+            await ctx.send("You need permissions **{0}** to do that.".format(
+                ",".join(util.format_permission(p, True) for p in error.missing_perms))
+            )
+
+        # Bot Missing Permission
+        if(isinstance(error, commands.BotMissingPermissions)):
+            await ctx.send("I need permissions **{}** to do that.".format(
+                ",".join(util.format_permission(p, True) for p in error.missing_perms))
+            )
+
+        # Command on Cooldown
+        if(isinstance(error, commands.CommandOnCooldown)):
+            await ctx.send("You must wait {0} seconds before using that command again.".format(
+                int(error.retry_after))
+            )
+
+        # Extension Not Found/Loaded (Module not found)
+        if(isinstance(error, commands.ExtensionError)):
+            await ctx.send("I could not find that extension.")
 
 def setup(client):
     client.add_cog(Events(client))

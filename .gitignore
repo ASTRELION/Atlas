@@ -2,6 +2,8 @@
 config.json
 .DS_Store
 *.json
+atlas.log
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
